@@ -7,10 +7,11 @@
 		'0', '.', '=', ' + '
 	];
 	let expression = '';
+	let seenDecimal = false;
 
 	// Functions
 	function backspace() {
-		const endIndex = expression[expression.length - 1] == ' ' ? -3 : -1;
+		const endIndex = (expression[expression.length - 1] == ' ' ? -3 : -1);
 		expression = expression.slice(0, endIndex);
 	}
 
@@ -33,31 +34,44 @@
 			/^(-?([0-9]*[.])?[0-9]+) [+\-*/] (-?([0-9]*[.])?[0-9]+)$/g
 		);
 		if (validatedExpression == null) {
-			alert(`${expression} is an invalid arithmetic expression.`);
-			return;
+			alert('ERROR!\nTo avoid ambiguity, simple calculator can only handle two argument expressions using of of the 4 arithmetic operators:\nargA + argB,\nargA / argB,\nargA * argB,\nargA / argB');
+			return expression;
 		}
 
 		// Extract tokens and evaluate
-		const [numA, numB] = expression.match(/-?([0-9]*[.])?[0-9]+/g);
 		const [operator] = expression.match(/ [+\-*/] /);
-		expression = applyOperator(operator, numA, numB);
+		const [numA, numB] = expression.match(/-?([0-9]*[.])?[0-9]+/g);
+		return applyOperator(operator, numA, numB);
 	}
 
 	function updateExpression(event) {
-		if (event.target.textContent != '=') {
-			expression += event.target.textContent;
+		if ([" + ", " - ", " * ", " / ", " = "].includes(event.target.textContent)) {
+			seenDecimal = false;
+		}
+
+		// Update expression
+		if (seenDecimal && event.target.textContent==".") {
+			alert("ERROR!\nYou cannot use a decimal point (.) twice in a single argument.\nPlease try again")
+		} else if (event.target.textContent == '=') {
+			expression = evaluateExpression();
 		} else {
-			evaluateExpression();
+			expression += event.target.textContent;
+		}
+
+		// Update seenDecimal
+		if (event.target.textContent == ".") {
+			seenDecimal = true;
 		}
 	}
 </script>
 
-<div class="w-1/2 max-w-80 mx-auto py-2 grid grid-cols-4 gap-1">
-	<input class="rounded outline outline-gray-500 text-4xl col-span-3 row-span-2" value={expression} />
-	<button class="col-start-4 bg-blue-500 text-white text-base rounded" on:click={backspace}>Back</button>
-	<button class="col-start-4 bg-red-500 text-white text-base rounded" on:click={() => (expression = '')}>Clear</button>
+<div class="p-1 grid grid-cols-4 gap-1 w-64 h-64">
+	<strong class="col-span-3">Scientific Calculator</strong>
+	<input class="bg-slate-600 rounded outline outline-gray-500 text-4xl col-span-3 row-span-2" value={expression} />
+	<button class="col-start-4 bg-blue-500 text-base rounded" on:click={backspace}>Back</button>
+	<button class="col-start-4 bg-red-500 text-base rounsded" on:click={() => (expression = '')}>Clear</button>
 	{#each calculatorButtons as calculatorButton}
-		<button class="bg-gray-500 text-white rounded" on:click={updateExpression}
+		<button class="bg-slate-700 rounded" on:click={updateExpression}
 			>{calculatorButton}</button
 		>
 	{/each}
